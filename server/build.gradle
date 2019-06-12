@@ -10,6 +10,8 @@ dependencies {
     implementation 'io.undertow:undertow-core:2.0.21.Final'
 
 //    implementation 'com.google.android:android:4.1.1.4'
+
+    testImplementation 'junit:junit:4.12'
 }
 
 compileKotlin {

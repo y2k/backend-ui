@@ -6,6 +6,7 @@
 
     <application
             android:theme="@style/Theme.AppCompat"
+            android:label="Backend UI"
             android:allowBackup="false"
             android:supportsRtl="true">
         <activity android:name=".MainActivity">

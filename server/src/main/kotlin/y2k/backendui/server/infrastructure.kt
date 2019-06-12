@@ -1,7 +1,12 @@
 package y2k.backendui.server
 
+import io.undertow.Handlers.path
+import io.undertow.Handlers.websocket
 import io.undertow.Undertow
-import io.undertow.util.Headers
+import io.undertow.websockets.core.AbstractReceiveListener
+import io.undertow.websockets.core.BufferedTextMessage
+import io.undertow.websockets.core.WebSocketChannel
+import io.undertow.websockets.core.WebSockets
 import y2k.backendui.server.TodoList.Model
 import y2k.backendui.server.TodoList.Msg
 import y2k.tea.Cmd
@@ -87,6 +92,13 @@ inline var View_.onClickMsg: Msg
 
 object MsgPacker {
 
+    fun deserialize(messageText: ByteArray): Msg =
+        Base64.getDecoder()
+            .decode(messageText)
+            .let(::ByteArrayInputStream)
+            .let(::ObjectInputStream)
+            .readObject() as Msg
+
     fun deserialize(messageText: String): Msg =
         Base64.getDecoder()
             .decode(messageText)
@@ -111,29 +123,45 @@ object App {
     fun main(args: Array<String>) {
         Undertow.builder()
             .addHttpListener(8080, "0.0.0.0")
-            .setHandler { exchange ->
+            .setHandler(path().addPrefixPath("/socket", websocket { _, channel ->
+                channel.receiveSetter.set(object : AbstractReceiveListener() {
 
-                val serMsg = exchange.requestHeaders.getFirst("RemoteUI-Msg")
-                if (serMsg != null) {
-                    val msg = MsgPacker.deserialize(serMsg)
-
-                    val (newModel, _) = TodoList.update(modelRef.get(), msg)
-                    modelRef.set(newModel)
-
-                }
-
-                exchange.responseHeaders.put(Headers.CONTENT_TYPE, "application/octet-stream")
-                try {
-                    val bytes = getPageBytes()
-                    exchange.responseSender.send(ByteBuffer.wrap(bytes))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    throw e
-                }
-            }
+                    override fun onFullTextMessage(channel: WebSocketChannel?, message: BufferedTextMessage) {
+                        val msg = message.data
+                        if (msg == ":CONNECT:") {
+                            handle(null) {
+                                WebSockets.sendBinary(ByteBuffer.wrap(it), channel, null)
+                            }
+                        } else {
+                            handle(msg) {
+                                WebSockets.sendBinary(ByteBuffer.wrap(it), channel, null)
+                            }
+                        }
+                    }
+                })
+                channel.resumeReceives()
+            }))
             .build()
             .start()
         Thread.sleep(Long.MAX_VALUE)
+    }
+
+    private fun handle(serMsg: String?, send: (ByteArray) -> Unit) {
+
+        if (serMsg != null) {
+            val msg = MsgPacker.deserialize(serMsg)
+
+            val (newModel, _) = TodoList.update(modelRef.get(), msg)
+            modelRef.set(newModel)
+        }
+
+        try {
+            val bytes = getPageBytes()
+            send(bytes)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
     }
 
     private fun getPageBytes(): ByteArray {

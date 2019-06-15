@@ -57,24 +57,18 @@ class MainActivity : AppCompatActivity() {
     private fun attachClickListeners(node: VirtualNode, f: (String) -> Any?): VirtualNode {
         if (node !is View_) return node
 
-        val msgProp = node.props.find { it.name == "contentDescription" }
+        val msgProp = node.props.find { it.propId == 17 }
 
         if (msgProp != null) {
-
-            val p = Property<View.OnClickListener?, View>(false, "onClickListener", null, View::setOnClickListener)
-
-            val f = generateSequence<Class<*>>(node.javaClass, { it.superclass })
-                .first { it.simpleName == "View_" }
-                .getDeclaredField("_onClickListener")
-            f.isAccessible = true
-            f.set(node, p)
+            val p = Property(52, View.OnClickListener { f(msgProp.value as String) })
+            node.props += p
 
             node.onClickListener = View.OnClickListener {
                 f(msgProp.value as String)
             }
         }
 
-        node.props.removeAll { it.name == "contentDescription" }
+        node.props.removeAll { it.propId == 17 }
 
         node.children.forEach {
             attachClickListeners(it, f)
@@ -100,6 +94,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        socket.close(0, null)
+        socket.cancel()
     }
 }

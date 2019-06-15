@@ -4,12 +4,12 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
+    implementation 'com.github.y2k:virtual-ui-lib:0.1'
+
     implementation 'com.github.y2k:tea:0.3.3'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
 
     implementation 'io.undertow:undertow-core:2.0.21.Final'
-
-//    implementation 'com.google.android:android:4.1.1.4'
 
     testImplementation 'junit:junit:4.12'
 }

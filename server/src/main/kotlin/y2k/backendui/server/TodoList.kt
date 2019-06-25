@@ -53,7 +53,6 @@ object TodoList : TeaComponent<Model, Msg> {
         linearLayout {
             nodes = {
                 textView {
-                    //                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
                     padding = pad(vertical = 20)
                     textSizeFloat = 16f
                     textCharSequence = item }

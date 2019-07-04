@@ -18,7 +18,8 @@ object TodoList : TeaComponent<Model, Msg> {
         class TodoChanged(val items: List<String>) : Msg()
         class RemoveClicked(val text: String) : Msg()
         class AddClicked : Msg()
-        class TodoAddResult(val result: Either<Exception, Unit>) : Msg() }
+        class TodoAddResult(val result: Either<Exception, Unit>) : Msg()
+    }
 
     override fun initialize() = Model() to Cmd.none<Msg>()
 
@@ -29,7 +30,9 @@ object TodoList : TeaComponent<Model, Msg> {
         is Msg.NewItemTextChanged -> model.copy(newItem = msg.text) to Cmd.none()
         is Msg.TodoAddResult -> when (msg.result) {
             is Either.Left -> model to Effects.showToast("Не удалось добавить элемент")
-            is Either.Right -> model to Cmd.none() } }
+            is Either.Right -> model to Cmd.none()
+        }
+    }
 
     override fun sub() = Sub.empty<Msg>()
 
@@ -42,12 +45,17 @@ object TodoList : TeaComponent<Model, Msg> {
                     text = model.newItem,
                     onTextChanged = { dispatch(Msg.NewItemTextChanged(it)) }) {
                     singleLine = true
-                    hintCharSequence = "Enter text..." }
+                    hintCharSequence = "Enter text..."
+                }
                 button {
                     textCharSequence = "Add"
-                    onClickMsg = Msg.AddClicked() }
+                    onClickMsg = Msg.AddClicked()
+                }
                 staticListView(model.items) {
-                    itemView(it) } } }
+                    itemView(it)
+                }
+            }
+        }
 
     private fun UiContext.itemView(item: String) =
         linearLayout {
@@ -55,7 +63,12 @@ object TodoList : TeaComponent<Model, Msg> {
                 textView {
                     padding = pad(vertical = 20)
                     textSizeFloat = 16f
-                    textCharSequence = item }
+                    textCharSequence = item
+                }
                 button {
                     textCharSequence = "Delete"
-                    onClickMsg = Msg.RemoveClicked(item) } } } }
+                    onClickMsg = Msg.RemoveClicked(item)
+                }
+            }
+        }
+}
